@@ -37,9 +37,16 @@ def play_music(file):
     pixels_thread.start()
     sd.wait()
 
+def play_songs(songs):
+    for song in song:
+        play_music(songs)
+
 def do_command(command):
     print(f'received command {command}')
-    if command == "play chill" or command == "play intense" or command == "music":
+    if command == "play chill" or command == "calm":
+        music_thread = threading.Thread(target=play_songs, args=(['LDR_Chemtrails.wav', 'IV.wav', 'FrenchSong.wav'],))
+        music_thread.start()
+    elif command == "hyper" or command == "play intense":
         music_thread = threading.Thread(target=play_music, args=('StarWars3.wav',))
         music_thread.start()
     elif command == "lights" or command == "light" or command == "lit" or command == "rainbow":
