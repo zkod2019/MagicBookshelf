@@ -1,6 +1,11 @@
 const actionEl = document.querySelector("#action-select");
 const booksList = document.querySelector("#books-list");
 
+var SpeechRecognition = window.SpeechRecognition || webkitSpeechRecognition;
+var SpeechGrammarList = window.SpeechGrammarList || webkitSpeechGrammarList;
+var SpeechRecognitionEvent =
+  window.SpeechRecognitionEvent || webkitSpeechRecognitionEvent;
+
 const html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", {
   fps: 10,
   qrbox: 250,
@@ -35,6 +40,52 @@ function onScanSuccess(decodedText, decodedResult) {
       html5QrcodeScanner.render(onScanSuccess);
     });
 }
+
+const grammar = `
+#JSGF V1.0;
+
+grammar vxmlgram;
+
+public <command> =
+    titles
+    | play chill
+    | play intense
+    | rainbow
+    | matrix
+    | remix;
+`;
+
+
+const reco = new SpeechRecognition();
+const recoList = new SpeechGrammarList();
+let speech = new SpeechSynthesisUtterance();
+
+recoList.addFromString(grammar, 1);
+reco.grammars = recoList;
+
+reco.continuous = false;
+reco.lang = "en-US";
+reco.interimResults = false;
+reco.maxAlternatives = 1;
+
+const listenBtn = document.querySelector(".listen");
+listenBtn.addEventListener("click", () => {
+  reco.start();
+  console.log("Ready to receive a color command.");
+});
+
+window.speechSynthesis.onvoiceschanged = () => {
+  speech.voice = window.speechSynthesis.getVoices()[0];
+};
+speech.lang = "en";
+
+reco.addEventListener("result", (e) => {
+  const said = e.results[0][0].transcript;
+  fetch(`./voice-command?command=${encodeURIComponent(said)}`)
+  console.log('we think you said: ', said)
+  speech.text = said;
+  window.speechSynthesis.speak(speech);
+});
 
 const GOOGLE_BOOKS_API_KEY = "AIzaSyAjnuM0ma2Es__HV4ksbDqfNKpfRcdMzJo";
 

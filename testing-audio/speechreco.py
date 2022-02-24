@@ -26,18 +26,24 @@ print(sd.query_devices())
 strip = PixelStrip(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
 strip.begin()
 
+def do_command(command):
+    if command == "play chill":
+        data, fs = sf.read('StarWars3.wav')
+        sd.play(data, fs)
+        sd.wait()
+    elif command == "play intense":
+        data, fs = sf.read('StarWars3.wav')
+        sd.play(data, fs)
+        sd.wait()
+    elif command == "lights" or command == "light" or command == "lit":
+        colorWipe(strip, Color(255, 0, 0), 10)
+        colorWipe(strip, Color(0, 0, 0), 10)
+
 def callback(recognizer, audio):
     try:
         said = recognizer.recognize_google(audio)
         print(f"Google Speech Recognition thinks you said {said}")
-
-        if said == "music":
-            data, fs = sf.read('StarWars3.wav')
-            sd.play(data, fs)
-            sd.wait()
-        elif said == "lights" or said == "light" or said == "lit":
-            colorWipe(strip, Color(255, 0, 0), 10)
-            colorWipe(strip, Color(0, 0, 0), 10)
+        do_command(said)
     except sr.UnknownValueError:
         print("Google Speech Recognition could not understand audio")
     except sr.RequestError as e:
