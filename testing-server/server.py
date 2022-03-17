@@ -30,6 +30,22 @@ print(sd.query_devices())
 strip = PixelStrip(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
 strip.begin()
 
+def rainbow_lights(strip, wait_ms=50):                    #method for 1st animation 
+    red = (255, 0 ,0)                           #colors are determined based on (r,g,b)
+    orange= (255, 165 ,0)
+    yellow= (255, 255, 0)
+    green = (127, 255, 0)
+    blue = (0, 191, 255)
+    purple = (153, 50, 204)
+    colors = [red, orange, yellow, green, blue, purple]     #colors are added to a list
+    num_pixels_per_color = int(strip.numPixels() / colors.len())
+    
+    for i, color in enumerate(colors):
+        for j in range(num_pixels_per_color):
+            strip.setPixelColor((i*num_pixels_per_color)+j, color)
+            strip.show()
+            time.sleep(wait_ms / 1000.0)  
+
 def play_music(file):
     data, fs = sf.read(file)
     sd.play(data, fs)
@@ -38,20 +54,25 @@ def play_music(file):
     sd.wait()
 
 def play_songs(songs):
-    for song in song:
+    for song in songs:
         play_music(songs)
 
 def do_command(command):
     print(f'received command {command}')
-    if command == "play chill" or command == "calm":
+    smol_command = command.lower()
+    if "play chill" in smol_command or "calm" in smol_command or "music" in smol_command :
         music_thread = threading.Thread(target=play_songs, args=(['LDR_Chemtrails.wav', 'IV.wav', 'FrenchSong.wav'],))
         music_thread.start()
-    elif command == "hyper" or command == "play intense":
+        pixels_thread = threading.Thread(target=colorWipe, args=(strip, Color(0, 0, 255), 10))
+        pixels_thread.start()
+    elif "hyper" in smol_command or "play intense" in smol_command:
         music_thread = threading.Thread(target=play_music, args=('StarWars3.wav',))
         music_thread.start()
-    elif command == "lights" or command == "light" or command == "lit" or command == "rainbow":
+    elif "lights" in smol_command or "light" in smol_command or "lit" in smol_command or "rainbow" in smol_command:
         pixels_thread = threading.Thread(target=colorWipe, args=(strip, Color(255, 0, 0), 10))
         pixels_thread.start()
+    elif "bye" in smol_command or "off" in smol_command:
+        colorWipe(strip, Color(0, 0, 0), 10)
     else:
         print(f'unrecognized command: {command}')
 
@@ -113,6 +134,7 @@ def on_voice_command():
 def speech_rec_fun():
     r.listen_in_background(m, callback)
 
+rainbow_lights(strip, 10)
 speech_rec_thread = threading.Thread(target=speech_rec_fun)
 speech_rec_thread.start()
 speech_rec_thread.join()
