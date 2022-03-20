@@ -8,6 +8,20 @@ import sounddevice as sd
 import soundfile as sf
 import threading
 import random
+import RPi.GPIO as GPIO
+import time
+ 
+SENSOR_PIN = 20
+ 
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(SENSOR_PIN, GPIO.IN)
+#  https://tutorials-raspberrypi.com/connect-and-control-raspberry-pi-motion-detector-pir/
+def my_callback(channel):
+    # Here, alternatively, an application / command etc. can be started.
+    print('There was a movement!')
+    
+GPIO.add_event_detect(SENSOR_PIN , GPIO.RISING, callback=my_callback)
+
 
 # LED strip configuration:
 LED_COUNT = 300       # Number of LED pixels.
@@ -81,7 +95,7 @@ def play_music(file):
 
 def play_songs(songs):
     for song in songs:
-        play_music(songs)
+        play_music(song)
 
 def do_command(command):
     print(f'received command {command}')
