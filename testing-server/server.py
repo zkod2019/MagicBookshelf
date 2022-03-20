@@ -7,6 +7,7 @@ from rpi_ws281x import PixelStrip, Color
 import sounddevice as sd
 import soundfile as sf
 import threading
+import random
 
 # LED strip configuration:
 LED_COUNT = 300       # Number of LED pixels.
@@ -30,21 +31,46 @@ print(sd.query_devices())
 strip = PixelStrip(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
 strip.begin()
 
-def rainbow_lights(strip, wait_ms=50):                    #method for 1st animation 
-    red = (255, 0 ,0)                           #colors are determined based on (r,g,b)
-    orange= (255, 165 ,0)
-    yellow= (255, 255, 0)
-    green = (127, 255, 0)
-    blue = (0, 191, 255)
-    purple = (153, 50, 204)
-    colors = [red, orange, yellow, green, blue, purple]     #colors are added to a list
-    num_pixels_per_color = int(strip.numPixels() / colors.len())
-    
-    for i, color in enumerate(colors):
-        for j in range(num_pixels_per_color):
-            strip.setPixelColor((i*num_pixels_per_color)+j, color)
-            strip.show()
-            time.sleep(wait_ms / 1000.0)  
+
+# def rainbow_lights(strip, wait_ms=50):                    #method for 1st animation 
+#     red = Color(255, 0 ,0)                           #colors are determined based on (r,g,b)
+#     orange= Color(255, 165 ,0)
+#     yellow= (255, 255, 0)
+#     green = Color(127, 255, 0)
+#     blue = Color(0, 191, 255)
+#     purple = Color(153, 50, 204)
+#     colors = [red, orange, yellow, green, blue, purple]     #colors are added to a list
+#     num_pixels_per_color = int(strip.numPixels() / len(colors))
+#     
+#     for i, color in enumerate(colors):
+#         for j in range(num_pixels_per_color):
+#             strip.setPixelColor((i*num_pixels_per_color)+j, color)
+#             strip.show()
+#             time.sleep(wait_ms / 1000.0)
+
+
+# wheel and rainbow cycle r from https://github.com/rpi-ws281x/rpi-ws281x-python/blob/master/examples/strandtest.py#L56
+def wheel(pos):
+#     color = list(np.random.choice(range(256), size=3))
+#     return Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 10))
+    """Generate rainbow colors across 0-255 positions."""
+    if pos < 85:
+        return Color(pos * 3, 255 - pos * 3, 0)
+    elif pos < 170:
+        pos -= 85
+        return Color(255 - pos * 3, 0, pos * 3)
+    else:
+        pos -= 170
+        return Color(0, pos * 3, 255 - pos * 3)
+
+def rainbowCycle(strip, wait_ms=20, iterations=5):
+    """Draw rainbow that uniformly distributes itself across all pixels."""
+    for j in range(256 * iterations):
+        for i in range(strip.numPixels()):
+            strip.setPixelColor(i, wheel(
+                (int(i * 256 / strip.numPixels()) + j) & 255))
+        strip.show()
+        time.sleep(wait_ms / 1000.0)
 
 def play_music(file):
     data, fs = sf.read(file)
@@ -134,8 +160,10 @@ def on_voice_command():
 def speech_rec_fun():
     r.listen_in_background(m, callback)
 
-rainbow_lights(strip, 10)
+
+# rainbow_lights(strip, 10)
 speech_rec_thread = threading.Thread(target=speech_rec_fun)
 speech_rec_thread.start()
 speech_rec_thread.join()
+rainbowCycle(strip)
 app.run(host='0.0.0.0', ssl_context='adhoc')
