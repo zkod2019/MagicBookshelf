@@ -65,7 +65,7 @@ def wheel(pos):
         pos -= 170
         return Color(0, pos * 3, 255 - pos * 3)
 
-def rainbowCycle(strip, wait_ms=20, iterations=5):
+def rainbowCycle(strip, wait_ms=20, iterations=1):
     """Draw rainbow that uniformly distributes itself across all pixels."""
     for j in range(256 * iterations):
         for i in range(strip.numPixels()):
@@ -77,8 +77,8 @@ def rainbowCycle(strip, wait_ms=20, iterations=5):
 def play_music(file):
     data, fs = sf.read(file)
     sd.play(data, fs)
-    pixels_thread = threading.Thread(target=colorWipe, args=(strip, Color(0, 255, 0), 10))
-    pixels_thread.start()
+#     pixels_thread = threading.Thread(target=colorWipe, args=(strip, Color(0, 255, 0), 10))
+#     pixels_thread.start()
     sd.wait()
 
 def play_songs(songs):
@@ -96,6 +96,8 @@ def do_command(command):
     elif "music" in smol_command or "play song" in smol_command:
         music_thread = threading.Thread(target=play_music, args=('LDR_Chemtrails.wav',))
         music_thread.start()
+        pixels_thread = threading.Thread(target=colorWipe, args=(strip, Color(0, 255, 0), 10))
+        pixels_thread.start()
     elif "lights" in smol_command or "light" in smol_command or "lit" in smol_command or "rainbow" in smol_command:
         pixels_thread = threading.Thread(target=colorWipe, args=(strip, Color(255, 0, 0), 10))
         pixels_thread.start()
@@ -180,6 +182,14 @@ def distance_measurement_thread_function():
     print("Ready")
 
     distance_sensor_active = False
+    animation_idx = 0
+
+    animations = [
+        (colorWipe, (strip, Color(255, 0, 0), 10)),
+        (colorWipe, (strip, Color(0, 255, 0), 10)),
+        (colorWipe, (strip, Color(0, 255, 255), 10)),
+    ]
+
     while True:
         GPIO.output(TRIG,True)
         time.sleep(0.00001)
@@ -197,6 +207,11 @@ def distance_measurement_thread_function():
 
         if distance <= 10 and not distance_sensor_active:
             distance_sensor_active = True
+            animation_idx = (animation_idx + 1) % len(animations)
+            print (animation_idx)
+            animation_deets = animations[animation_idx]
+            thread = threading.Thread(target=animation_deets[0], args=animation_deets[1])
+            thread.start()
             print("something is close !!!")
         
         if distance > 10 and distance_sensor_active:
