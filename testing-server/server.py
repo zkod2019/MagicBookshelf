@@ -1,7 +1,6 @@
 import json
 from flask import Flask, request, send_from_directory, Response
 from tinydb import TinyDB, Query
-import time
 import speech_recognition as sr
 from rpi_ws281x import PixelStrip, Color
 import sounddevice as sd
@@ -10,6 +9,7 @@ import threading
 import random
 import RPi.GPIO as GPIO
 import time
+import threading
 
 # LED strip configuration:
 LED_COUNT = 300       # Number of LED pixels.
@@ -88,13 +88,13 @@ def play_songs(songs):
 def do_command(command):
     print(f'received command {command}')
     smol_command = command.lower()
-    if "play chill" in smol_command or "calm" in smol_command or "music" in smol_command :
-        music_thread = threading.Thread(target=play_songs, args=(['LDR_Chemtrails.wav', 'IV.wav', 'FrenchSong.wav'],))
+    if "piano" in smol_command or "play piano" in smol_command or "calm" in smol_command :
+        music_thread = threading.Thread(target=play_songs, args=(['IV.wav', 'FrenchSong.wav'],))
         music_thread.start()
         pixels_thread = threading.Thread(target=colorWipe, args=(strip, Color(0, 0, 255), 10))
         pixels_thread.start()
-    elif "hyper" in smol_command or "play intense" in smol_command:
-        music_thread = threading.Thread(target=play_music, args=('StarWars3.wav',))
+    elif "music" in smol_command or "play song" in smol_command:
+        music_thread = threading.Thread(target=play_music, args=('LDR_Chemtrails.wav',))
         music_thread.start()
     elif "lights" in smol_command or "light" in smol_command or "lit" in smol_command or "rainbow" in smol_command:
         pixels_thread = threading.Thread(target=colorWipe, args=(strip, Color(255, 0, 0), 10))
@@ -162,40 +162,51 @@ def on_voice_command():
 def speech_rec_fun():
     r.listen_in_background(m, callback)
     
+# https://thepihut.com/blogs/raspberry-pi-tutorials/hc-sr04-ultrasonic-range-sensor-on-the-raspberry-pi
+def distance_measurement_thread_function():
+    GPIO.setmode(GPIO.BCM)
 
-GPIO.setmode(GPIO.BCM)
+    TRIG = 23
+    ECHO = 24
 
-TRIG = 23
-ECHO = 24
+    print ("Distance Measurement In Progress")
 
-print ("Distance Measurement In Progress")
+    GPIO.setup(TRIG,GPIO.OUT)
+    GPIO.setup(ECHO,GPIO.IN)
 
-GPIO.setup(TRIG,GPIO.OUT)
-GPIO.setup(ECHO,GPIO.IN)
+    GPIO.output(TRIG,False)
+    print("Waiting for Sensor")
+    time.sleep(2)
+    print("Ready")
 
-GPIO.output(TRIG,False)
-print ("Waiting for Sensor")
-time.sleep(2)
+    distance_sensor_active = False
+    while True:
+        GPIO.output(TRIG,True)
+        time.sleep(0.00001)
+        GPIO.output(TRIG,False)
 
-GPIO.output(TRIG,True)
-time.sleep(0.00001)
-GPIO.output(TRIG,False)
+        while GPIO.input(ECHO) == 0:
+            pulse_start = time.time()
 
-while GPIO.input(ECHO)==0:
-    pulse_start = time.time()
+        while GPIO.input(ECHO) == 1:
+            pulse_end = time.time()
 
-while GPIO.input(ECHO)==1:
-    pulse_end = time.time()
+        pulse_duration = pulse_end - pulse_start
+        distance = pulse_duration * 17150
+        distance = round(distance, 2)
 
-pulse_duration = pulse_end - pulse_start
-distance = pulse_duration * 17150
-distance = round(distance, 2)
+        if distance <= 10 and not distance_sensor_active:
+            distance_sensor_active = True
+            print("something is close !!!")
+        
+        if distance > 10 and distance_sensor_active:
+            distance_sensor_active = False
+            print("de activated !!!")
+        
+        time.sleep(0.2)
 
-if distance <= 10:
-    print ("Distance", distance, "cm")
-
-# GPIO.cleanup()
-
+distance_measurement_thread = threading.Thread(target=distance_measurement_thread_function)
+distance_measurement_thread.start()
 
 # rainbow_lights(strip, 10)
 speech_rec_thread = threading.Thread(target=speech_rec_fun)
