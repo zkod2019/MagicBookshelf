@@ -186,8 +186,11 @@ def distance_measurement_thread_function():
 
     animations = [
         (colorWipe, (strip, Color(255, 0, 0), 10)),
+        (colorWipe, (strip, Color(255, 127, 0), 10)),
+        (colorWipe, (strip, Color(255, 255, 0), 10)),
         (colorWipe, (strip, Color(0, 255, 0), 10)),
         (colorWipe, (strip, Color(0, 255, 255), 10)),
+        (colorWipe, (strip, Color(143, 0, 255), 10)),
     ]
 
     while True:
