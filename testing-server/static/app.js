@@ -1,10 +1,10 @@
 const actionEl = document.querySelector("#action-select");
 const booksList = document.querySelector("#books-list");
 
-var SpeechRecognition = window.SpeechRecognition || webkitSpeechRecognition;
-var SpeechGrammarList = window.SpeechGrammarList || webkitSpeechGrammarList;
-var SpeechRecognitionEvent =
-  window.SpeechRecognitionEvent || webkitSpeechRecognitionEvent;
+//var SpeechRecognition = window.SpeechRecognition || webkitSpeechRecognition;
+//var SpeechGrammarList = window.SpeechGrammarList || webkitSpeechGrammarList;
+//var SpeechRecognitionEvent =
+//  window.SpeechRecognitionEvent || webkitSpeechRecognitionEvent;
 
 const html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", {
   fps: 10,
@@ -40,7 +40,7 @@ function onScanSuccess(decodedText, decodedResult) {
       html5QrcodeScanner.render(onScanSuccess);
     });
 }
-
+/*
 const grammar = `
 #JSGF V1.0;
 
@@ -86,7 +86,7 @@ reco.addEventListener("result", (e) => {
   speech.text = said;
   window.speechSynthesis.speak(speech);
 });
-
+*/
 const GOOGLE_BOOKS_API_KEY = "AIzaSyAjnuM0ma2Es__HV4ksbDqfNKpfRcdMzJo";
 
 const listFormatter = new Intl.ListFormat('en', { style: 'long', type: 'conjunction' });
