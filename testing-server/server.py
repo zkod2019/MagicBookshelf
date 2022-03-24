@@ -106,16 +106,25 @@ def do_command(command):
     else:
         print(f'unrecognized command: {command}')
 
+keywords = [("bookshelf", 1), ("hey bookshelf", 1), ]
+
 def callback(recognizer, audio):
     try:
-        said = recognizer.recognize_google(audio)
-        print(f"Google Speech Recognition thinks you said {said}")
-        do_command(said)
-    except sr.UnknownValueError:
-        print("Google Speech Recognition could not understand audio")
-    except sr.RequestError as e:
-        print(f"Could not request results from Google Speech Recognition service; {format(e)}")
+        speech_as_text = recognizer.recognize_sphinx(audio, keyword_entries=keywords)
+        print(speech_as_text)
+        # Look for your "Ok Google" keyword in speech_as_text
+        if "bookshelf" in speech_as_text or "hey bookshelf":
+            recognize_main()
 
+    except sr.UnknownValueError:
+        print("Oops! Didn't catch that")
+
+def recognize_main():
+    print("Listening for Command...")
+    audio_data = r.listen(source, timeout=2)
+    said = r.recognize_google(audio_data)
+    print(f"Speech Recognition thinks you said {said}")
+    do_command(said)
 
 r = sr.Recognizer()
 m = sr.Microphone()
@@ -231,4 +240,4 @@ speech_rec_thread = threading.Thread(target=speech_rec_fun)
 speech_rec_thread.start()
 speech_rec_thread.join()
 rainbowCycle(strip)
-app.run(host='0.0.0.0', ssl_context='adhoc')
+app.run(host='0.0.0.0', ssl_context='adhoc', port=8087)
