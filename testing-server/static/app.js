@@ -32,11 +32,14 @@ try {
             .then((gbooksJson) => {
               const info = gbooksJson.items[0].volumeInfo;
               booksList.innerHTML += `
-            <li>
-              <img src="${info.imageLinks.thumbnail}"/>
+            <li class="list">
+              <img src="${info.imageLinks.thumbnail}" style="width: auto; height: 160px;" />
               <h2>${info.title}</h2>
+              <h3>${listFormatter.format(info.authors)}</h3>
+              <details>
+              <summary>About</summary>
               <p>${info.description}</p>
-              <p>${listFormatter.format(info.authors)}</p>
+              </details>
             </li>`;
             })
             .catch((e) => {
@@ -70,10 +73,10 @@ try {
     
     public <command> =
         titles
-        | play chill
-        | play intense
+        | piano
+        | bookshelf
         | rainbow
-        | matrix
+        | music
         | remix;
     `;
 

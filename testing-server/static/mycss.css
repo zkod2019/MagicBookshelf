@@ -1,0 +1,50 @@
+@import "//rsms.me/inter/inter.css";
+@import url("https://fonts.googleapis.com/css2?family=Arima+Madurai&display=swap");
+* {
+  font-family: "Arima Madurai", cursive;
+}
+
+html,
+body,
+main {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+main {
+  display: flex;
+}
+
+#books-list{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+button{
+    color: deeppink;
+    background-color: white;
+    text-align: center;
+    text-decoration: none;
+    font-size: 14px;
+    border-color: hotpink;
+}
+
+button:hover{
+    background-color: hotpink;
+    border-color: hotpink;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    border-radius: 30px;
+    transition: 0.5s;
+}
+
+a{
+    color: deeppink;
+}
+
+select{
+    color: deeppink;
+}

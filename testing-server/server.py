@@ -20,7 +20,7 @@ LED_BRIGHTNESS = 255  # Set to 0 for darkest and 255 for brightest
 LED_INVERT = False    # True to invert the signal (when using NPN transistor level shift)
 LED_CHANNEL = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
 
-# Define functions which animate LEDs in various ways.
+# Define functions which animate LEDs
 def colorWipe(strip, color, wait_ms=50):
     for i in range(strip.numPixels()):
         strip.setPixelColor(i, color)
@@ -33,29 +33,9 @@ print(sd.query_devices())
 strip = PixelStrip(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL)
 strip.begin()
 
-
-# def rainbow_lights(strip, wait_ms=50):                    #method for 1st animation 
-#     red = Color(255, 0 ,0)                           #colors are determined based on (r,g,b)
-#     orange= Color(255, 165 ,0)
-#     yellow= (255, 255, 0)
-#     green = Color(127, 255, 0)
-#     blue = Color(0, 191, 255)
-#     purple = Color(153, 50, 204)
-#     colors = [red, orange, yellow, green, blue, purple]     #colors are added to a list
-#     num_pixels_per_color = int(strip.numPixels() / len(colors))
-#     
-#     for i, color in enumerate(colors):
-#         for j in range(num_pixels_per_color):
-#             strip.setPixelColor((i*num_pixels_per_color)+j, color)
-#             strip.show()
-#             time.sleep(wait_ms / 1000.0)
-
-
-# wheel and rainbow cycle r from https://github.com/rpi-ws281x/rpi-ws281x-python/blob/master/examples/strandtest.py#L56
+# wheel and rainbow cycle are from https://github.com/rpi-ws281x/rpi-ws281x-python/blob/master/examples/strandtest.py#L56
 def wheel(pos):
-#     color = list(np.random.choice(range(256), size=3))
-#     return Color(random.randint(0, 255), random.randint(0, 255), random.randint(0, 10))
-    """Generate rainbow colors across 0-255 positions."""
+# Generate rainbow colors across 0-255 positions
     if pos < 85:
         return Color(pos * 3, 255 - pos * 3, 0)
     elif pos < 170:
@@ -66,7 +46,7 @@ def wheel(pos):
         return Color(0, pos * 3, 255 - pos * 3)
 
 def rainbowCycle(strip, wait_ms=20, iterations=1):
-    """Draw rainbow that uniformly distributes itself across all pixels."""
+# creates rainbow animation that distributes itself across all pixels
     for j in range(256 * iterations):
         for i in range(strip.numPixels()):
             strip.setPixelColor(i, wheel(
@@ -77,8 +57,6 @@ def rainbowCycle(strip, wait_ms=20, iterations=1):
 def play_music(file):
     data, fs = sf.read(file)
     sd.play(data, fs)
-#     pixels_thread = threading.Thread(target=colorWipe, args=(strip, Color(0, 255, 0), 10))
-#     pixels_thread.start()
     sd.wait()
 
 def play_songs(songs):
@@ -99,21 +77,22 @@ def do_command(command):
         pixels_thread = threading.Thread(target=colorWipe, args=(strip, Color(0, 255, 0), 10))
         pixels_thread.start()
     elif "lights" in smol_command or "light" in smol_command or "lit" in smol_command or "rainbow" in smol_command:
-        pixels_thread = threading.Thread(target=colorWipe, args=(strip, Color(255, 0, 0), 10))
+        pixels_thread = threading.Thread(target=rainbowCycle, args=(strip,))
         pixels_thread.start()
+#         rainbowCycle(strip)
     elif "bye" in smol_command or "off" in smol_command:
         colorWipe(strip, Color(0, 0, 0), 10)
     else:
         print(f'unrecognized command: {command}')
 
-keywords = [("bookshelf", 1), ("hey bookshelf", 1), ]
+keywords = [("bookshelf", 1), ("hey bookshelf", 1), ("hey", 1), ("morning", 1),]
 
 def callback(recognizer, audio):
     try:
         speech_as_text = recognizer.recognize_sphinx(audio, keyword_entries=keywords)
         print(speech_as_text)
         # Look for your "Ok Google" keyword in speech_as_text
-        if "bookshelf" in speech_as_text or "hey bookshelf":
+        if "bookshelf" in speech_as_text or "hey bookshelf" or "hey" or "morning":
             recognize_main()
 
     except sr.UnknownValueError:
@@ -195,11 +174,13 @@ def distance_measurement_thread_function():
 
     animations = [
         (colorWipe, (strip, Color(255, 0, 0), 10)),
-        (colorWipe, (strip, Color(255, 127, 0), 10)),
-        (colorWipe, (strip, Color(255, 255, 0), 10)),
+        (colorWipe, (strip, Color(229, 83, 0), 10)),
+        (colorWipe, (strip, Color(255, 159, 0), 10)),
         (colorWipe, (strip, Color(0, 255, 0), 10)),
         (colorWipe, (strip, Color(0, 255, 255), 10)),
         (colorWipe, (strip, Color(143, 0, 255), 10)),
+        (colorWipe, (strip, Color(248, 24, 148), 10)),
+        (rainbowCycle, (strip,)),
     ]
 
     while True:
@@ -234,10 +215,7 @@ def distance_measurement_thread_function():
 
 distance_measurement_thread = threading.Thread(target=distance_measurement_thread_function)
 distance_measurement_thread.start()
-
-# rainbow_lights(strip, 10)
 speech_rec_thread = threading.Thread(target=speech_rec_fun)
 speech_rec_thread.start()
 speech_rec_thread.join()
-rainbowCycle(strip)
-app.run(host='0.0.0.0', ssl_context='adhoc', port=8091)
+app.run(host='0.0.0.0', ssl_context='adhoc', port=8101)
