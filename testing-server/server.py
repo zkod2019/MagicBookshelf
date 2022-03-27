@@ -12,13 +12,13 @@ import time
 import threading
 
 # LED strip configuration:
-LED_COUNT = 300       # Number of LED pixels.
-LED_PIN = 21          # GPIO pin connected to the pixels (18 uses PWM!).
-LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
-LED_DMA = 10          # DMA channel to use for generating signal (try 10)
-LED_BRIGHTNESS = 255  # Set to 0 for darkest and 255 for brightest
-LED_INVERT = False    # True to invert the signal (when using NPN transistor level shift)
-LED_CHANNEL = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
+LED_COUNT = 300       
+LED_PIN = 21          
+LED_FREQ_HZ = 800000  
+LED_DMA = 10          
+LED_BRIGHTNESS = 255  
+LED_INVERT = False    
+LED_CHANNEL = 0       
 
 # Define functions which animate LEDs
 def colorWipe(strip, color, wait_ms=50):
@@ -45,8 +45,8 @@ def wheel(pos):
         pos -= 170
         return Color(0, pos * 3, 255 - pos * 3)
 
-def rainbowCycle(strip, wait_ms=20, iterations=1):
 # creates rainbow animation that distributes itself across all pixels
+def rainbowCycle(strip, wait_ms=20, iterations=1):
     for j in range(256 * iterations):
         for i in range(strip.numPixels()):
             strip.setPixelColor(i, wheel(
@@ -54,20 +54,47 @@ def rainbowCycle(strip, wait_ms=20, iterations=1):
         strip.show()
         time.sleep(wait_ms / 1000.0)
 
+# based on the color passed, random LED lights turn on and off to create matrix/rain effect
+def togglePixelRandomly(strip, i, color):
+    time.sleep(random.uniform(0, 2))
+    if color == 'green':
+        strip.setPixelColor(i, Color(0, random.randrange(60, 255), 0))
+    elif color == 'red':
+        strip.setPixelColor(i, Color(random.randrange(60, 255), 0, 0))
+    elif color == 'blue':
+        strip.setPixelColor(i, Color(0, 0, random.randrange(60, 255)))
+
+    strip.show()
+
+    time.sleep(random.uniform(0, 2))
+    strip.setPixelColor(i, Color(0, 0, 0))
+    strip.show()
+
+# flickers LED lights at random positions
+def randomPosition(strip, color):
+    indices = list(range(strip.numPixels()))
+    random.shuffle(indices)
+    for i in indices:
+        pixelThread = threading.Thread(target=togglePixelRandomly, args=(strip, i, color))
+        pixelThread.start()
+
+# reads music file
 def play_music(file):
     data, fs = sf.read(file)
     sd.play(data, fs)
     sd.wait()
 
+# goes through a list of files and calls play_music on them
 def play_songs(songs):
     for song in songs:
         play_music(song)
 
+# starts threads of music and lights based on the voice command given
 def do_command(command):
     print(f'received command {command}')
     smol_command = command.lower()
     if "piano" in smol_command or "play piano" in smol_command or "calm" in smol_command :
-        music_thread = threading.Thread(target=play_songs, args=(['IV.wav', 'FrenchSong.wav'],))
+        music_thread = threading.Thread(target=play_songs, args=(['FrenchSong.wav', 'IV.wav'],))
         music_thread.start()
         pixels_thread = threading.Thread(target=colorWipe, args=(strip, Color(0, 0, 255), 10))
         pixels_thread.start()
@@ -79,7 +106,15 @@ def do_command(command):
     elif "lights" in smol_command or "light" in smol_command or "lit" in smol_command or "rainbow" in smol_command:
         pixels_thread = threading.Thread(target=rainbowCycle, args=(strip,))
         pixels_thread.start()
-#         rainbowCycle(strip)
+    elif "matrix" in smol_command or "grass" in smol_command:
+        pixels_thread = threading.Thread(target=randomPosition, args=(strip, "green"))
+        pixels_thread.start()
+    elif "rain" in smol_command or "tears" in smol_command:
+        pixels_thread = threading.Thread(target=randomPosition, args=(strip, "blue"))
+        pixels_thread.start()
+    elif "love" in smol_command or "heart" in smol_command:
+        pixels_thread = threading.Thread(target=randomPosition, args=(strip, "red"))
+        pixels_thread.start()
     elif "bye" in smol_command or "off" in smol_command:
         colorWipe(strip, Color(0, 0, 0), 10)
     else:
@@ -87,17 +122,18 @@ def do_command(command):
 
 keywords = [("bookshelf", 1), ("hey bookshelf", 1), ("hey", 1), ("morning", 1),]
 
+# recognizes keywords in background audio
 def callback(recognizer, audio):
     try:
         speech_as_text = recognizer.recognize_sphinx(audio, keyword_entries=keywords)
         print(speech_as_text)
-        # Look for your "Ok Google" keyword in speech_as_text
         if "bookshelf" in speech_as_text or "hey bookshelf" or "hey" or "morning":
             recognize_main()
 
     except sr.UnknownValueError:
         print("Oops! Didn't catch that")
 
+# uses google cloud (no longer background audio)
 def recognize_main():
     print("Listening for Command...")
     audio_data = r.listen(source, timeout=2)
@@ -114,6 +150,7 @@ app = Flask(__name__)
 
 db = TinyDB('./db.json')
 
+# server endpoints
 @app.route('/', methods=['GET'])
 def hello_world():
     return app.send_static_file('index.html')
@@ -152,7 +189,7 @@ def on_voice_command():
 def speech_rec_fun():
     r.listen_in_background(m, callback)
     
-# https://thepihut.com/blogs/raspberry-pi-tutorials/hc-sr04-ultrasonic-range-sensor-on-the-raspberry-pi
+# set up for the HC-SR04 sensor
 def distance_measurement_thread_function():
     GPIO.setmode(GPIO.BCM)
 
@@ -180,7 +217,6 @@ def distance_measurement_thread_function():
         (colorWipe, (strip, Color(0, 255, 255), 10)),
         (colorWipe, (strip, Color(143, 0, 255), 10)),
         (colorWipe, (strip, Color(248, 24, 148), 10)),
-        (rainbowCycle, (strip,)),
     ]
 
     while True:
@@ -213,9 +249,10 @@ def distance_measurement_thread_function():
         
         time.sleep(0.2)
 
+# these threads are always running in the background
 distance_measurement_thread = threading.Thread(target=distance_measurement_thread_function)
 distance_measurement_thread.start()
 speech_rec_thread = threading.Thread(target=speech_rec_fun)
 speech_rec_thread.start()
 speech_rec_thread.join()
-app.run(host='0.0.0.0', ssl_context='adhoc', port=8101)
+app.run(host='0.0.0.0', ssl_context='adhoc', port=8105)

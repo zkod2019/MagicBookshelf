@@ -17,6 +17,7 @@ try {
     qrbox: 250,
   });
 
+// displays books from the database to the website
   function displayBooksList() {
     fetch("./books")
       .then((res) => res.json())
@@ -54,6 +55,7 @@ try {
       });
   }
 
+// method is called when a scan finishes successfully
   function onScanSuccess(decodedText, decodedResult) {
     const isbn = decodedText;
     fetch(`./books?isbn=${isbn}`, {
@@ -65,6 +67,7 @@ try {
     });
   }
 
+// if the program is not run on safari, it will listen
   if (!isSafari) {
     const grammar = `
     #JSGF V1.0;
